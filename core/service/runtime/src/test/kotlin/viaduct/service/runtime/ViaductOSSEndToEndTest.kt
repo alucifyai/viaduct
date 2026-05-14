@@ -45,12 +45,13 @@ class ViaductOSSEndToEndTest {
         """.trimIndent()
 
     @BeforeEach
+    @Suppress("DEPRECATION")
     fun setUp() {
-        schemaId = SchemaId.Scoped("public", setOf("viaduct-public"))
         schemaConfiguration = SchemaConfiguration.fromSdl(
             sdl,
-            scopes = setOf(schemaId.toScopeConfig())
+            scopes = setOf(SchemaConfiguration.ScopeConfig("public", setOf("viaduct-public")))
         )
+        schemaId = SchemaId.Scoped("public", schemaConfiguration.resolveSchemaId("public"))
         subject = StandardViaduct.Builder()
             .withFlagManager(flagManager)
             .withNoTenantAPIBootstrapper()
