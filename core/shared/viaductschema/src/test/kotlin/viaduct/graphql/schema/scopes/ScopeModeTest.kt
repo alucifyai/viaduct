@@ -55,6 +55,6 @@ class ScopeModeTest {
         val bytes = clazz.getResourceAsStream(resourcePath)!!.use { it.readBytes() }
         // Class file bytes 6-7 (0-indexed) hold major version in big-endian
         val major = ((bytes[6].toInt() and 0xFF) shl 8) or (bytes[7].toInt() and 0xFF)
-        assertEquals(expectedMajor, major, "Expected JVM 11 (major=55) for ${clazz.simpleName}, got $major")
+        assertEquals(expectedMajor, major, "Expected major version $expectedMajor for ${clazz.simpleName}, got $major")
     }
 }

@@ -85,13 +85,28 @@ class SchemaConfigurationFromResourcesTest {
     // TS-017: resource file read once, cached immutably
     @Test
     fun `TS-017 resource file is loaded at construction time not on each resolveSchemaId`() {
-        val config = SchemaConfiguration.fromResources(setOf("api", "adminApi"))
+        var openCount = 0
+        val parent = Thread.currentThread().contextClassLoader
+            ?: SchemaConfigurationFromResourcesTest::class.java.classLoader
+        val countingLoader = object : ClassLoader(parent) {
+            override fun getResourceAsStream(name: String): java.io.InputStream? {
+                if (name == "META-INF/viaduct/schema-scoping.json") {
+                    openCount++
+                }
+                return super.getResourceAsStream(name)
+            }
+        }
 
-        // Calling resolveSchemaId many times is consistent and fast (no classpath IO)
+        val config = SchemaConfiguration.fromResources(setOf("api", "adminApi"), countingLoader)
+
+        assertEquals(1, openCount, "Resource file must be opened exactly once during construction")
+
         val expected = setOf("internal", "public")
-        repeat(100) {
+        repeat(50) {
             assertEquals(expected, config.resolveSchemaId("api"))
         }
+
+        assertEquals(1, openCount, "resolveSchemaId must not re-open the resource file")
     }
 
     // TS-055: SchemaConfiguration immutable after construction; concurrent reads safe
