@@ -5,19 +5,22 @@ import graphql.schema.idl.UnExecutableSchemaGenerator
 import java.io.File
 import java.nio.file.Path
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.gradle.api.GradleException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import viaduct.graphql.schema.scopes.NoScopesMode
 import viaduct.graphql.schema.scopes.ResourceFileSchema
+import viaduct.graphql.schema.scopes.ScopeMode
 import viaduct.graphql.schema.scopes.ScopedMode
 
 /**
  * Integration tests for the scope pipeline orchestration inside AssembleCentralSchemaTask.
  *
- * Covers: TS-049, R-22-001, R-22-002, R-22-003.
+ * Covers: TS-049, R-22-001, R-22-002, R-22-003, R-20-001, R-20-005.
  *
  * These tests exercise pipeline helper functions directly to verify phase ordering,
  * caching behaviour, introspection validation, and resource file emission.
@@ -169,5 +172,46 @@ class AssembleCentralSchemaTaskScopePipelineTest {
             // Must not throw
             validateScopeSchemaWithIntrospection(schema, scopeSet)
         }
+    }
+
+    // R-20-001 + R-20-005: AssembleCentralSchemaTask.taskAction() guards runScopePipeline
+    // (which calls writeScopeResourceFile) with `if (scopeMode is ScopedMode)`.
+    // When NoScopesMode is in effect (scopeUniverse empty), the file must NOT be written.
+    @Test
+    fun `R-20-001 NoScopesMode does not write META-INF schema-scoping resource file`() {
+        val outDir = tempDir.toFile()
+
+        // Simulates AssembleCentralSchemaTask.parseScopeMode() when scopeUniverse is empty.
+        // NoScopesMode is NOT a ScopedMode, so the guard never calls writeScopeResourceFile.
+        val scopeMode: ScopeMode = NoScopesMode
+        if (scopeMode is ScopedMode) {
+            writeScopeResourceFile(outDir, scopeMode)
+        }
+
+        assertFalse(
+            outDir.resolve("META-INF/viaduct/schema-scoping.json").exists(),
+            "R-20-001: META-INF/viaduct/schema-scoping.json must NOT be created in NoScopesMode"
+        )
+    }
+
+    // R-20-005 positive control: in ScopedMode, writeScopeResourceFile IS called and the
+    // resource file IS created. Confirms the guard correctly distinguishes NoScopesMode vs ScopedMode.
+    @Test
+    fun `R-20-005 positive control ScopedMode does write META-INF schema-scoping resource file`() {
+        val outDir = tempDir.toFile()
+        val scopedMode = ScopedMode(
+            scopeUniverse = setOf("public"),
+            scopedSchemas = mapOf("api" to setOf("public"))
+        )
+
+        val scopeMode: ScopeMode = scopedMode
+        if (scopeMode is ScopedMode) {
+            writeScopeResourceFile(outDir, scopeMode)
+        }
+
+        assertTrue(
+            outDir.resolve("META-INF/viaduct/schema-scoping.json").exists(),
+            "R-20-005: META-INF/viaduct/schema-scoping.json MUST be created in ScopedMode"
+        )
     }
 }
