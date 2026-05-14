@@ -1,9 +1,11 @@
 package viaduct.service.runtime
 
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import viaduct.apiannotations.InternalApi
 import viaduct.engine.SchemaFactory
 import viaduct.engine.api.ViaductSchema
+import viaduct.graphql.schema.scopes.ResourceFileSchema
 import viaduct.graphql.scopes.ScopedSchemaBuilder
 import viaduct.service.api.SchemaId
 
@@ -133,10 +135,72 @@ class SchemaConfiguration private constructor(
     }
 
     companion object {
+        private const val SCOPE_CONFIG_RESOURCE_PATH = "META-INF/viaduct/schema-scoping.json"
+
         /**
          * Default configuration that loads the full schema from resources without any scoped schemas.
          */
         val DEFAULT: SchemaConfiguration = fromResources()
+
+        /**
+         * Creates a [SchemaConfiguration] by reading scope declarations from the META-INF/viaduct/schema-scoping.json
+         * file produced by AssembleCentralSchemaTask. Each schemaId in [schemaIds] (except "FULL") is resolved to
+         * its declared scope set from the resource file.
+         *
+         * If the resource file is absent and [schemaIds] contains only "FULL", returns a no-scopes configuration.
+         * If the resource file is absent and [schemaIds] contains non-FULL IDs, throws [ViaductSchemaLoadException].
+         * If a requested schemaId is not declared in the resource file, throws [ViaductInvalidConfigurationException].
+         *
+         * @param schemaIds set of schema IDs to register; "FULL" is always implicitly included as the base schema
+         * @return a [SchemaConfiguration] with the resolved scope sets, using eager materialization
+         */
+        fun fromResources(schemaIds: Set<String>): SchemaConfiguration {
+            val classLoader = Thread.currentThread().contextClassLoader
+                ?: SchemaConfiguration::class.java.classLoader
+            return fromResources(schemaIds, classLoader)
+        }
+
+        internal fun fromResources(schemaIds: Set<String>, classLoader: ClassLoader): SchemaConfiguration {
+            val resourceStream = classLoader.getResourceAsStream(SCOPE_CONFIG_RESOURCE_PATH)
+
+            if (resourceStream == null) {
+                val nonFullIds = schemaIds.filter { it != ResourceFileSchema.FULL_SCHEMA_ID }
+                if (nonFullIds.isEmpty()) {
+                    return fromResources()
+                }
+                throw ViaductSchemaLoadException(
+                    "$SCOPE_CONFIG_RESOURCE_PATH not found on classpath. " +
+                        "Cannot resolve schema IDs: $nonFullIds. " +
+                        "Ensure AssembleCentralSchemaTask has run."
+                )
+            }
+
+            val resourceFileSchema = try {
+                resourceStream.use { stream ->
+                    ResourceFileSchema.objectMapper().readValue(stream, ResourceFileSchema::class.java)
+                }
+            } catch (e: Exception) {
+                throw ViaductSchemaLoadException(
+                    "Failed to parse $SCOPE_CONFIG_RESOURCE_PATH: ${e.message}",
+                    e
+                )
+            }
+
+            val scopes = mutableSetOf<ScopeConfig>()
+            for (schemaId in schemaIds) {
+                if (schemaId == ResourceFileSchema.FULL_SCHEMA_ID) {
+                    continue
+                }
+                val scopeIds = resourceFileSchema.declaredScopedSchemas[schemaId]
+                    ?: throw ViaductInvalidConfigurationException(
+                        "Schema ID '$schemaId' not found in $SCOPE_CONFIG_RESOURCE_PATH. " +
+                            "Declared IDs: ${resourceFileSchema.declaredScopedSchemas.keys}"
+                    )
+                scopes.add(ScopeConfig(schemaId, scopeIds))
+            }
+
+            return fromResources(scopes = scopes, lazyScopedSchemas = false)
+        }
 
         /**
          * Creates a [SchemaConfiguration] that registers schemas from the provided SDL string.
@@ -277,6 +341,25 @@ class SchemaConfiguration private constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Returns the set of scope IDs associated with the given schema [id].
+     * Returns an empty set for [SchemaId.Full.id] ("FULL"), which always represents the complete schema.
+     * Throws [ViaductInvalidConfigurationException] if the [id] is not registered in this configuration.
+     *
+     * @param id the schema ID to resolve
+     * @return the set of scope IDs for the given schema ID, or an empty set for "FULL"
+     */
+    fun resolveSchemaId(id: String): Set<String> {
+        if (id == SchemaId.Full.id) {
+            return emptySet()
+        }
+        val scopedId = scopedSchemas.keys.find { it.id == id }
+            ?: throw ViaductInvalidConfigurationException(
+                "Schema ID '$id' is not registered in this SchemaConfiguration."
+            )
+        return Collections.unmodifiableSet(scopedId.scopeIds)
     }
 }
 
