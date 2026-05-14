@@ -225,17 +225,16 @@ class ViaductBuilder {
 @StableApi
 class SchemaScopeInfo private constructor(
     val schemaId: SchemaId,
+    val scopesToApply: Set<String>,
 ) {
     constructor(id: String, scopesToApply: Set<String> = emptySet()) : this(
-        SchemaId.Scoped(id, scopesToApply)
+        SchemaId(id),
+        scopesToApply
     )
 
     init {
         require(schemaId.id.isNotBlank()) { "schema id must not be blank" }
     }
-
-    val scopesToApply: Set<String>
-        get() = (schemaId as SchemaId.Scoped).scopeIds
 
     internal fun toScopeConfig(): SchemaConfiguration.ScopeConfig = SchemaConfiguration.ScopeConfig(schemaId.id, scopesToApply)
 }

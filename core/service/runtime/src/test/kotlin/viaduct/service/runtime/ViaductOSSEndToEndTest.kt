@@ -33,7 +33,7 @@ import viaduct.service.api.spi.FlagManager.Flag
 class ViaductOSSEndToEndTest {
     private lateinit var subject: StandardViaduct
     private lateinit var schemaConfiguration: SchemaConfiguration
-    private lateinit var schemaId: SchemaId.Scoped
+    private lateinit var schemaId: SchemaId
 
     private val flagManager = object : FlagManager {
         override fun isEnabled(flag: Flag) = true
@@ -51,7 +51,7 @@ class ViaductOSSEndToEndTest {
             sdl,
             scopes = setOf(SchemaConfiguration.ScopeConfig("public", setOf("viaduct-public")))
         )
-        schemaId = SchemaId.Scoped("public", schemaConfiguration.resolveSchemaId("public"))
+        schemaId = SchemaId("public")
         subject = StandardViaduct.Builder()
             .withFlagManager(flagManager)
             .withNoTenantAPIBootstrapper()
@@ -149,7 +149,7 @@ class ViaductOSSEndToEndTest {
                 exceptionSchema,
                 scopes = setOf(SchemaConfiguration.ScopeConfig("exception-test", setOf("viaduct-public")))
             )
-            val schemaId = SchemaId.Scoped("exception-test", exceptionSchemaConfig.resolveSchemaId("exception-test"))
+            val schemaId = SchemaId("exception-test")
 
             val exceptionSubject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
@@ -194,7 +194,7 @@ class ViaductOSSEndToEndTest {
                 variableSchema,
                 scopes = setOf(SchemaConfiguration.ScopeConfig("variable-test", setOf("viaduct-public")))
             )
-            val schemaId = SchemaId.Scoped("variable-test", variableSchemaConfig.resolveSchemaId("variable-test"))
+            val schemaId = SchemaId("variable-test")
 
             val variableSubject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)

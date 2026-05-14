@@ -24,7 +24,7 @@ import viaduct.service.api.spi.FlagManager.Flag
 @ExperimentalCoroutinesApi
 class ScopeFilteringIntrospectionTest {
     private lateinit var subject: StandardViaduct
-    private lateinit var schemaId: SchemaId.Scoped
+    private lateinit var schemaId: SchemaId
     private lateinit var schemaConfiguration: SchemaConfiguration
 
     private val flagManager = object : FlagManager {
@@ -53,7 +53,7 @@ class ScopeFilteringIntrospectionTest {
             sdl,
             scopes = setOf(SchemaConfiguration.ScopeConfig("public", setOf("publicScope")))
         )
-        schemaId = SchemaId.Scoped("public", schemaConfiguration.resolveSchemaId("public"))
+        schemaId = SchemaId("public")
         subject = StandardViaduct.Builder()
             .withFlagManager(flagManager)
             .withNoTenantAPIBootstrapper()

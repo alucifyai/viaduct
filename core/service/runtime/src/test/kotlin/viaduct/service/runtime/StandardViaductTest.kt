@@ -133,7 +133,7 @@ class StandardViaductTest {
             fullSchema,
             scopes = setOf(SchemaConfiguration.ScopeConfig(SCHEMA_ID, setOf("scope1")))
         )
-        val schemaId = SchemaId.Scoped(SCHEMA_ID, config.resolveSchemaId(SCHEMA_ID))
+        val schemaId = SchemaId(SCHEMA_ID)
         val viaductBuilder = StandardViaduct.Builder().withSchemaConfiguration(config)
 
         val stdViaduct = viaductBuilder.build()

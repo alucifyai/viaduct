@@ -100,10 +100,10 @@ class EngineRegistryTest {
         val fullSchema = registry.getSchema(SchemaId.Full)
         assertValidSchema(fullSchema)
 
-        val adminSchema = registry.getSchema(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
+        val adminSchema = registry.getSchema(SchemaId("admin"))
         assertValidSchema(adminSchema)
 
-        val publicSchema = registry.getSchema(SchemaId.Scoped("public", config.resolveSchemaId("public")))
+        val publicSchema = registry.getSchema(SchemaId("public"))
         assertValidSchema(publicSchema)
     }
 
@@ -124,7 +124,7 @@ class EngineRegistryTest {
 
         val registry = factory.create(config)
 
-        val lazySchema = registry.getSchema(SchemaId.Scoped("lazy-scope", config.resolveSchemaId("lazy-scope")))
+        val lazySchema = registry.getSchema(SchemaId("lazy-scope"))
         assertValidSchema(lazySchema)
     }
 
@@ -136,14 +136,14 @@ class EngineRegistryTest {
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
         val registry = factory.create(config)
 
-        val invalidId = SchemaId.Scoped("nonexistent", setOf("test"))
+        val invalidId = SchemaId("nonexistent")
 
         val exception = assertThrows(EngineRegistry.SchemaNotFoundException::class.java) {
             registry.getSchema(invalidId)
         }
 
         assertEquals(
-            "No schema registered for schema ID: Scoped(id=nonexistent, scopeIds=[test])",
+            "No schema registered for schema ID: SchemaId(id='nonexistent')",
             exception.message
         )
     }
@@ -164,7 +164,7 @@ class EngineRegistryTest {
         )
         val registry = factory.create(config)
 
-        val lazySchemaId = SchemaId.Scoped("lazy-test", config.resolveSchemaId("lazy-test"))
+        val lazySchemaId = SchemaId("lazy-test")
 
         val schema1 = registry.getSchema(lazySchemaId)
         val schema2 = registry.getSchema(lazySchemaId)
@@ -224,7 +224,7 @@ class EngineRegistryTest {
         registry.setEngineFactory(engineFactory)
 
         val fullEngine = registry.getEngine(SchemaId.Full)
-        val adminEngine = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
+        val adminEngine = registry.getEngine(SchemaId("admin"))
 
         assertNotNull(fullEngine)
         assertNotNull(adminEngine)
@@ -242,14 +242,14 @@ class EngineRegistryTest {
         val registry = factory.create(config)
         registry.setEngineFactory(engineFactory)
 
-        val invalidId = SchemaId.Scoped("nonexistent", setOf("test"))
+        val invalidId = SchemaId("nonexistent")
 
         val exception = assertThrows(EngineRegistry.SchemaNotFoundException::class.java) {
             registry.getEngine(invalidId)
         }
 
         assertEquals(
-            "No schema registered for schema ID: Scoped(id=nonexistent, scopeIds=[test])",
+            "No schema registered for schema ID: SchemaId(id='nonexistent')",
             exception.message
         )
     }
@@ -272,7 +272,7 @@ class EngineRegistryTest {
         val registry = factory.create(config)
         registry.setEngineFactory(engineFactory)
 
-        val lazySchemaId = SchemaId.Scoped("lazy-engine", config.resolveSchemaId("lazy-engine"))
+        val lazySchemaId = SchemaId("lazy-engine")
 
         val engine = registry.getEngine(lazySchemaId)
 
@@ -298,7 +298,7 @@ class EngineRegistryTest {
         val fullSchema = registry.getSchema(SchemaId.Full)
         assertValidSchema(fullSchema)
 
-        val scopedSchema = registry.getSchema(SchemaId.Scoped("resources-scope", config.resolveSchemaId("resources-scope")))
+        val scopedSchema = registry.getSchema(SchemaId("resources-scope"))
         assertValidSchema(scopedSchema)
     }
 
@@ -322,7 +322,7 @@ class EngineRegistryTest {
         assertValidSchema(fullSchema)
         assertSame(baseSchema.schema, fullSchema.schema, "fromSchema should use the exact provided schema")
 
-        val scopedSchema = registry.getSchema(SchemaId.Scoped("from-schema", config.resolveSchemaId("from-schema")))
+        val scopedSchema = registry.getSchema(SchemaId("from-schema"))
         assertValidSchema(scopedSchema)
     }
 
@@ -368,8 +368,8 @@ class EngineRegistryTest {
         val fullEngine2 = registry.getEngine(SchemaId.Full)
         val fullEngine3 = registry.getEngine(SchemaId.Full)
 
-        val adminEngine1 = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
-        val adminEngine2 = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
+        val adminEngine1 = registry.getEngine(SchemaId("admin"))
+        val adminEngine2 = registry.getEngine(SchemaId("admin"))
 
         assertSame(fullEngine1, fullEngine2, "Repeated calls for Full should return same engine")
         assertSame(fullEngine2, fullEngine3, "Repeated calls for Full should return same engine")
@@ -393,9 +393,9 @@ class EngineRegistryTest {
         registry.setEngineFactory(engineFactory)
 
         val fullEngine = registry.getEngine(SchemaId.Full)
-        val adminEngine = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
-        val publicEngine = registry.getEngine(SchemaId.Scoped("public", config.resolveSchemaId("public")))
-        val internalEngine = registry.getEngine(SchemaId.Scoped("internal", config.resolveSchemaId("internal")))
+        val adminEngine = registry.getEngine(SchemaId("admin"))
+        val publicEngine = registry.getEngine(SchemaId("public"))
+        val internalEngine = registry.getEngine(SchemaId("internal"))
 
         assertNotSame(fullEngine, adminEngine, "Full and admin engines should be different")
         assertNotSame(fullEngine, publicEngine, "Full and public engines should be different")
@@ -414,7 +414,7 @@ class EngineRegistryTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val customSchemaId = SchemaId.Scoped("custom", setOf("custom"))
+        val customSchemaId = SchemaId("custom")
 
         config.registerSchema(customSchemaId, { createSchemaFromSdl() })
 
@@ -431,7 +431,7 @@ class EngineRegistryTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val lazySchemaId = SchemaId.Scoped("lazy-registered", setOf("lazy"))
+        val lazySchemaId = SchemaId("lazy-registered")
 
         var computeBlockCalled = false
         config.registerSchema(
@@ -459,7 +459,7 @@ class EngineRegistryTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val eagerSchemaId = SchemaId.Scoped("eager-registered", setOf("eager"))
+        val eagerSchemaId = SchemaId("eager-registered")
 
         var computeBlockCalled = false
         config.registerSchema(
@@ -484,7 +484,7 @@ class EngineRegistryTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val schemaId = SchemaId.Scoped("duplicate-test", setOf("test"))
+        val schemaId = SchemaId("duplicate-test")
 
         val firstSchema = createSchemaFromSdl("type Query { first: String }")
         val secondSchema = createSchemaFromSdl("type Query { second: String }")
@@ -508,7 +508,7 @@ class EngineRegistryTest {
         val scopeConfig = SchemaConfiguration.ScopeConfig(id = "fromSdl", scopeIds = setOf("sdl"))
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = setOf(scopeConfig))
 
-        val registeredSchemaId = SchemaId.Scoped("registered", setOf("registered"))
+        val registeredSchemaId = SchemaId("registered")
         config.registerSchema(registeredSchemaId, { createSchemaFromSdl() })
 
         val registry = factory.create(config)
@@ -516,7 +516,7 @@ class EngineRegistryTest {
         val fullSchema = registry.getSchema(SchemaId.Full)
         assertValidSchema(fullSchema)
 
-        val fromSdlSchema = registry.getSchema(SchemaId.Scoped("fromSdl", config.resolveSchemaId("fromSdl")))
+        val fromSdlSchema = registry.getSchema(SchemaId("fromSdl"))
         assertValidSchema(fromSdlSchema)
 
         val registeredSchema = registry.getSchema(registeredSchemaId)
@@ -531,7 +531,7 @@ class EngineRegistryTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val registeredSchemaId = SchemaId.Scoped("engine-test", setOf("engine"))
+        val registeredSchemaId = SchemaId("engine-test")
 
         config.registerSchema(registeredSchemaId, { createSchemaFromSdl() })
 
