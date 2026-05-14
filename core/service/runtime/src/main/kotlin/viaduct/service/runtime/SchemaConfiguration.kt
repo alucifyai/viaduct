@@ -141,6 +141,7 @@ class SchemaConfiguration private constructor(
         /**
          * Default configuration that loads the full schema from resources without any scoped schemas.
          */
+        @Suppress("DEPRECATION")
         val DEFAULT: SchemaConfiguration = fromResources()
 
         /**
@@ -161,6 +162,7 @@ class SchemaConfiguration private constructor(
             return fromResources(schemaIds, classLoader)
         }
 
+        @Suppress("DEPRECATION")
         internal fun fromResources(schemaIds: Set<String>, classLoader: ClassLoader): SchemaConfiguration {
             val resourceStream = classLoader.getResourceAsStream(SCOPE_CONFIG_RESOURCE_PATH)
 
@@ -209,6 +211,7 @@ class SchemaConfiguration private constructor(
          * registered. Intended for use in tests that want to avoid classpath resource setup.
          */
         @VisibleForTest
+        @Suppress("DEPRECATION")
         fun forTesting(resourceJson: String): SchemaConfiguration {
             val resourceFileSchema = try {
                 ResourceFileSchema.objectMapper().readValue(resourceJson, ResourceFileSchema::class.java)
@@ -236,6 +239,11 @@ class SchemaConfiguration private constructor(
          *                          they are computed immediately during initialization.
          * @return a [SchemaConfiguration] with the registered schemas
          */
+        @Deprecated(
+            message = "Provide scopes via fromResources(schemaIds) or forTesting(json) instead of a raw Set<ScopeConfig>. " +
+                "The scopes parameter will be removed in a future version.",
+            level = DeprecationLevel.WARNING
+        )
         fun fromSdl(
             sdl: String,
             scopes: Set<ScopeConfig> = emptySet(),
@@ -264,6 +272,12 @@ class SchemaConfiguration private constructor(
          *                          they are computed immediately during initialization.
          * @return a [SchemaConfiguration] with the registered schemas
          */
+        @Deprecated(
+            message = "Provide scopes via fromResources(schemaIds) instead of a raw Set<ScopeConfig>. " +
+                "The scopes parameter will be removed in a future version.",
+            replaceWith = ReplaceWith("fromResources(schemaIds)"),
+            level = DeprecationLevel.WARNING
+        )
         fun fromResources(
             grtPackagePrefix: String? = null,
             resourcesIncluded: Regex? = null,
@@ -290,6 +304,11 @@ class SchemaConfiguration private constructor(
          *                          they are computed immediately during initialization.
          * @return a [SchemaConfiguration] with the registered schemas
          */
+        @Deprecated(
+            message = "Provide scopes via fromResources(schemaIds) or forTesting(json) instead of a raw Set<ScopeConfig>. " +
+                "The scopes parameter will be removed in a future version.",
+            level = DeprecationLevel.WARNING
+        )
         fun fromSchema(
             schema: ViaductSchema,
             scopes: Set<ScopeConfig> = emptySet(),

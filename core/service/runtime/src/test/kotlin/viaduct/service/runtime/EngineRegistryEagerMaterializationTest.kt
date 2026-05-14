@@ -79,8 +79,8 @@ class EngineRegistryEagerMaterializationTest {
         // Verify registry builds successfully using the ScopedSchemaBuilder path
         val factory = EngineRegistry.Factory(createSchemaFactory(), createDocumentProviderFactory())
         val registry = factory.create(config)
-        assertNotNull(registry.getSchema(SchemaId.Scoped("api", setOf("public"))))
-        assertNotNull(registry.getSchema(SchemaId.Scoped("adminApi", setOf("admin"))))
+        assertNotNull(registry.getSchema(SchemaId.Scoped("api", config.resolveSchemaId("api"))))
+        assertNotNull(registry.getSchema(SchemaId.Scoped("adminApi", config.resolveSchemaId("adminApi"))))
     }
 
     // TS-037: returned schemas are graphql-java GraphQLSchema instances

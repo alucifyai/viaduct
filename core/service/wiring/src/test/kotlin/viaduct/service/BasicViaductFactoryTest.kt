@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION") // Tests verify deprecated SchemaScopeInfo and withScopedSchemas still behave correctly
+
 package viaduct.service
 
 import org.junit.jupiter.api.Assertions.assertEquals

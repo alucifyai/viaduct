@@ -100,10 +100,10 @@ class EngineRegistryTest {
         val fullSchema = registry.getSchema(SchemaId.Full)
         assertValidSchema(fullSchema)
 
-        val adminSchema = registry.getSchema(SchemaId.Scoped("admin", setOf("admin")))
+        val adminSchema = registry.getSchema(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
         assertValidSchema(adminSchema)
 
-        val publicSchema = registry.getSchema(SchemaId.Scoped("public", setOf("public")))
+        val publicSchema = registry.getSchema(SchemaId.Scoped("public", config.resolveSchemaId("public")))
         assertValidSchema(publicSchema)
     }
 
@@ -124,7 +124,7 @@ class EngineRegistryTest {
 
         val registry = factory.create(config)
 
-        val lazySchema = registry.getSchema(SchemaId.Scoped("lazy-scope", setOf("lazy")))
+        val lazySchema = registry.getSchema(SchemaId.Scoped("lazy-scope", config.resolveSchemaId("lazy-scope")))
         assertValidSchema(lazySchema)
     }
 
@@ -164,7 +164,7 @@ class EngineRegistryTest {
         )
         val registry = factory.create(config)
 
-        val lazySchemaId = SchemaId.Scoped("lazy-test", setOf("lazy"))
+        val lazySchemaId = SchemaId.Scoped("lazy-test", config.resolveSchemaId("lazy-test"))
 
         val schema1 = registry.getSchema(lazySchemaId)
         val schema2 = registry.getSchema(lazySchemaId)
@@ -224,7 +224,7 @@ class EngineRegistryTest {
         registry.setEngineFactory(engineFactory)
 
         val fullEngine = registry.getEngine(SchemaId.Full)
-        val adminEngine = registry.getEngine(SchemaId.Scoped("admin", setOf("admin")))
+        val adminEngine = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
 
         assertNotNull(fullEngine)
         assertNotNull(adminEngine)
@@ -272,7 +272,7 @@ class EngineRegistryTest {
         val registry = factory.create(config)
         registry.setEngineFactory(engineFactory)
 
-        val lazySchemaId = SchemaId.Scoped("lazy-engine", setOf("lazy"))
+        val lazySchemaId = SchemaId.Scoped("lazy-engine", config.resolveSchemaId("lazy-engine"))
 
         val engine = registry.getEngine(lazySchemaId)
 
@@ -298,7 +298,7 @@ class EngineRegistryTest {
         val fullSchema = registry.getSchema(SchemaId.Full)
         assertValidSchema(fullSchema)
 
-        val scopedSchema = registry.getSchema(SchemaId.Scoped("resources-scope", setOf("resource")))
+        val scopedSchema = registry.getSchema(SchemaId.Scoped("resources-scope", config.resolveSchemaId("resources-scope")))
         assertValidSchema(scopedSchema)
     }
 
@@ -322,7 +322,7 @@ class EngineRegistryTest {
         assertValidSchema(fullSchema)
         assertSame(baseSchema.schema, fullSchema.schema, "fromSchema should use the exact provided schema")
 
-        val scopedSchema = registry.getSchema(SchemaId.Scoped("from-schema", setOf("test")))
+        val scopedSchema = registry.getSchema(SchemaId.Scoped("from-schema", config.resolveSchemaId("from-schema")))
         assertValidSchema(scopedSchema)
     }
 
@@ -368,8 +368,8 @@ class EngineRegistryTest {
         val fullEngine2 = registry.getEngine(SchemaId.Full)
         val fullEngine3 = registry.getEngine(SchemaId.Full)
 
-        val adminEngine1 = registry.getEngine(SchemaId.Scoped("admin", setOf("admin")))
-        val adminEngine2 = registry.getEngine(SchemaId.Scoped("admin", setOf("admin")))
+        val adminEngine1 = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
+        val adminEngine2 = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
 
         assertSame(fullEngine1, fullEngine2, "Repeated calls for Full should return same engine")
         assertSame(fullEngine2, fullEngine3, "Repeated calls for Full should return same engine")
@@ -393,9 +393,9 @@ class EngineRegistryTest {
         registry.setEngineFactory(engineFactory)
 
         val fullEngine = registry.getEngine(SchemaId.Full)
-        val adminEngine = registry.getEngine(SchemaId.Scoped("admin", setOf("admin")))
-        val publicEngine = registry.getEngine(SchemaId.Scoped("public", setOf("public")))
-        val internalEngine = registry.getEngine(SchemaId.Scoped("internal", setOf("internal")))
+        val adminEngine = registry.getEngine(SchemaId.Scoped("admin", config.resolveSchemaId("admin")))
+        val publicEngine = registry.getEngine(SchemaId.Scoped("public", config.resolveSchemaId("public")))
+        val internalEngine = registry.getEngine(SchemaId.Scoped("internal", config.resolveSchemaId("internal")))
 
         assertNotSame(fullEngine, adminEngine, "Full and admin engines should be different")
         assertNotSame(fullEngine, publicEngine, "Full and public engines should be different")
@@ -516,7 +516,7 @@ class EngineRegistryTest {
         val fullSchema = registry.getSchema(SchemaId.Full)
         assertValidSchema(fullSchema)
 
-        val fromSdlSchema = registry.getSchema(SchemaId.Scoped("fromSdl", setOf("sdl")))
+        val fromSdlSchema = registry.getSchema(SchemaId.Scoped("fromSdl", config.resolveSchemaId("fromSdl")))
         assertValidSchema(fromSdlSchema)
 
         val registeredSchema = registry.getSchema(registeredSchemaId)
