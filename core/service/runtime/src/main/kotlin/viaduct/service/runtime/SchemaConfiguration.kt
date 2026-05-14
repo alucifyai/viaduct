@@ -3,6 +3,7 @@ package viaduct.service.runtime
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import viaduct.apiannotations.InternalApi
+import viaduct.apiannotations.VisibleForTest
 import viaduct.engine.SchemaFactory
 import viaduct.engine.api.ViaductSchema
 import viaduct.graphql.schema.scopes.ResourceFileSchema
@@ -199,6 +200,28 @@ class SchemaConfiguration private constructor(
                 scopes.add(ScopeConfig(schemaId, scopeIds))
             }
 
+            return fromResources(scopes = scopes, lazyScopedSchemas = false)
+        }
+
+        /**
+         * Creates a [SchemaConfiguration] by parsing the given JSON string in the same format as the
+         * META-INF/viaduct/schema-scoping.json resource file. All non-FULL declared schemas are eagerly
+         * registered. Intended for use in tests that want to avoid classpath resource setup.
+         */
+        @VisibleForTest
+        fun forTesting(resourceJson: String): SchemaConfiguration {
+            val resourceFileSchema = try {
+                ResourceFileSchema.objectMapper().readValue(resourceJson, ResourceFileSchema::class.java)
+            } catch (e: Exception) {
+                throw ViaductSchemaLoadException(
+                    "Failed to parse schema-scoping JSON for testing: ${e.message}",
+                    e
+                )
+            }
+            val scopes = resourceFileSchema.declaredScopedSchemas
+                .filterKeys { it != ResourceFileSchema.FULL_SCHEMA_ID }
+                .map { (id, scopeIds) -> ScopeConfig(id, scopeIds) }
+                .toSet()
             return fromResources(scopes = scopes, lazyScopedSchemas = false)
         }
 
