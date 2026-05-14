@@ -83,6 +83,16 @@ class EngineRegistry private constructor(
             private suspend fun createAsync(config: SchemaConfiguration): EngineRegistry =
                 measureTimedValue {
                     log.info("Initializing EngineRegistry...")
+                    val registeredSchemaIds = listOf(SchemaId.Full.id) + config.scopedSchemas.keys.map { it.id }
+                    log.info("Registering {} schema(s): {}", registeredSchemaIds.size, registeredSchemaIds)
+                    if (config.scopedSchemas.size > 20) {
+                        log.warn(
+                            "EngineRegistry is registering {} scoped schemas, which exceeds the " +
+                                "recommended maximum of 20. Consider reducing the number of scope sets " +
+                                "to avoid startup performance impacts.",
+                            config.scopedSchemas.size
+                        )
+                    }
                     val fullSchemaConfig = config.fullSchemaConfig
                         ?: throw IllegalStateException("Full schema not registered. This is fatal and should never happen.")
                     // Build full schema eagerly (it's always accessed immediately during injection)
@@ -141,7 +151,22 @@ class EngineRegistry private constructor(
                             }
                         } else {
                             log.info("Eagerly building scoped schema for schema ID {}...", schemaId)
-                            lazyOf(scopeConfig.build(fullSchema)).also {
+                            val startNanos = System.nanoTime()
+                            val builtSchema = try {
+                                scopeConfig.build(fullSchema)
+                            } catch (e: Exception) {
+                                throw ViaductSchemaLoadException(
+                                    "Failed to eagerly materialize scoped schema for schema ID '$schemaId': ${e.message}",
+                                    e
+                                )
+                            }
+                            val materializationTimeMs = (System.nanoTime() - startNanos) / 1_000_000L
+                            log.debug(
+                                "Scoped schema for schema ID {} materialized. materialization_time_ms={}.",
+                                schemaId,
+                                materializationTimeMs
+                            )
+                            lazyOf(builtSchema).also {
                                 log.info("Scoped schema for schema ID {} built successfully.", schemaId)
                             }
                         }
