@@ -145,11 +145,11 @@ class ViaductOSSEndToEndTest {
                 exceptionWiring
             )
 
-            val schemaId = SchemaId.Scoped("exception-test", setOf("viaduct-public"))
             val exceptionSchemaConfig = SchemaConfiguration.fromSchema(
                 exceptionSchema,
-                scopes = setOf(schemaId.toScopeConfig())
+                scopes = setOf(SchemaConfiguration.ScopeConfig("exception-test", setOf("viaduct-public")))
             )
+            val schemaId = SchemaId.Scoped("exception-test", exceptionSchemaConfig.resolveSchemaId("exception-test"))
 
             val exceptionSubject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
@@ -190,11 +190,11 @@ class ViaductOSSEndToEndTest {
                 variableWiring
             )
 
-            val schemaId = SchemaId.Scoped("variable-test", setOf("viaduct-public"))
             val variableSchemaConfig = SchemaConfiguration.fromSchema(
                 variableSchema,
-                scopes = setOf(schemaId.toScopeConfig())
+                scopes = setOf(SchemaConfiguration.ScopeConfig("variable-test", setOf("viaduct-public")))
             )
+            val schemaId = SchemaId.Scoped("variable-test", variableSchemaConfig.resolveSchemaId("variable-test"))
 
             val variableSubject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
