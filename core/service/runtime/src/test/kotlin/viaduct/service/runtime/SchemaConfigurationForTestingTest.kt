@@ -33,12 +33,12 @@ class SchemaConfigurationForTestingTest {
         val config = SchemaConfiguration.forTesting(json)
 
         assertEquals(2, config.scopedSchemas.size)
-        val adminKey = config.scopedSchemas.keys.find { it.id == "adminApi" }
-        assertNotNull(adminKey)
-        assertEquals(setOf("admin"), adminKey.scopeIds)
-        val apiKey = config.scopedSchemas.keys.find { it.id == "api" }
-        assertNotNull(apiKey)
-        assertEquals(setOf("internal", "public"), apiKey.scopeIds)
+        val adminEntry = config.scopedSchemas.entries.find { it.key.id == "adminApi" }
+        assertNotNull(adminEntry)
+        assertEquals(setOf("admin"), adminEntry.value.scopeIds)
+        val apiEntry = config.scopedSchemas.entries.find { it.key.id == "api" }
+        assertNotNull(apiEntry)
+        assertEquals(setOf("internal", "public"), apiEntry.value.scopeIds)
         assertNotNull(config.fullSchemaConfig)
     }
 
@@ -81,8 +81,8 @@ class SchemaConfigurationForTestingTest {
             val configForTesting = SchemaConfiguration.forTesting(json)
 
             // Both should have the same scoped schema IDs with the same scope sets
-            val resourcesKeys = configFromResources.scopedSchemas.keys.map { it.id to it.scopeIds }.toSet()
-            val testingKeys = configForTesting.scopedSchemas.keys.map { it.id to it.scopeIds }.toSet()
+            val resourcesKeys = configFromResources.scopedSchemas.entries.map { it.key.id to it.value.scopeIds }.toSet()
+            val testingKeys = configForTesting.scopedSchemas.entries.map { it.key.id to it.value.scopeIds }.toSet()
             assertEquals(resourcesKeys, testingKeys)
         } finally {
             tempDir.toFile().deleteRecursively()

@@ -101,11 +101,11 @@ class NoScopesModeControlFlowTest {
         val ids = registry.getRegisteredSchemaIds()
         assertEquals(3, ids.size, "ScopedMode: FULL + api + adminApi = 3 schemas total")
         assertTrue(
-            ids.any { it is SchemaId.Scoped && it.id == "api" },
+            ids.any { it.id == "api" },
             "api scoped schema must be materialized and registered in ScopedMode"
         )
         assertTrue(
-            ids.any { it is SchemaId.Scoped && it.id == "adminApi" },
+            ids.any { it.id == "adminApi" },
             "adminApi scoped schema must be materialized and registered in ScopedMode"
         )
     }

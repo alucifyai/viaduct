@@ -64,7 +64,7 @@ class ViaductScopedSchemaIntegrationTest {
                 sdl,
                 scopes = setOf(SchemaConfiguration.ScopeConfig("public", setOf("viaduct-public")))
             )
-            val schemaId = SchemaId.Scoped("public", config.resolveSchemaId("public"))
+            val schemaId = SchemaId("public")
 
             subject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
@@ -125,7 +125,7 @@ class ViaductScopedSchemaIntegrationTest {
                     )
                 }
             }
-            val schemaId = SchemaId.Scoped("public", config.resolveSchemaId("public"))
+            val schemaId = SchemaId("public")
 
             subject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
@@ -190,7 +190,7 @@ class ViaductScopedSchemaIntegrationTest {
                 sdl,
                 scopes = setOf(SchemaConfiguration.ScopeConfig("SCHEMA_ID", setOf("SCOPE1")))
             )
-            val schemaId = SchemaId.Scoped("SCHEMA_ID", config.resolveSchemaId("SCHEMA_ID"))
+            val schemaId = SchemaId("SCHEMA_ID")
 
             subject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
@@ -264,8 +264,8 @@ class ViaductScopedSchemaIntegrationTest {
                     SchemaConfiguration.ScopeConfig("SCOPE2_ONLY", setOf("SCOPE2"))
                 )
             )
-            val schemaId1 = SchemaId.Scoped("SCOPE1_ONLY", config1.resolveSchemaId("SCOPE1_ONLY"))
-            val schemaId2 = SchemaId.Scoped("SCOPE2_ONLY", config1.resolveSchemaId("SCOPE2_ONLY"))
+            val schemaId1 = SchemaId("SCOPE1_ONLY")
+            val schemaId2 = SchemaId("SCOPE2_ONLY")
 
             subject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)
@@ -408,8 +408,8 @@ class ViaductScopedSchemaIntegrationTest {
                     SchemaConfiguration.ScopeConfig("SCHEMA_ID_2", setOf("SCOPE2"))
                 )
             )
-            val schemaId1 = SchemaId.Scoped("SCHEMA_ID_1", config2.resolveSchemaId("SCHEMA_ID_1"))
-            val schemaId2 = SchemaId.Scoped("SCHEMA_ID_2", config2.resolveSchemaId("SCHEMA_ID_2"))
+            val schemaId1 = SchemaId("SCHEMA_ID_1")
+            val schemaId2 = SchemaId("SCHEMA_ID_2")
 
             subject = StandardViaduct.Builder()
                 .withFlagManager(flagManager)

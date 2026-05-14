@@ -1,6 +1,5 @@
 package viaduct.service.api
 
-import viaduct.apiannotations.InternalApi
 import viaduct.apiannotations.StableApi
 
 /**
@@ -8,27 +7,16 @@ import viaduct.apiannotations.StableApi
  *
  * Viaduct supports multiple schema variants for a single service:
  * - [Full] — the default, complete schema containing all types and fields.
- * - [Scoped] — a subset of the full schema restricted by a set of scope IDs,
- *   useful for multi-tenancy or permission-based field visibility.
+ * - A named scoped variant — a subset of the full schema restricted by scope IDs declared via
+ *   [viaduct.service.runtime.SchemaConfiguration]. Construct with `SchemaId("myScope")`.
  * - [None] — represents a non-existent schema, used as a sentinel value.
  *
  * @see viaduct.service.ViaductBuilder.withSchemaConfiguration
  */
 @StableApi
-abstract class SchemaId(
+open class SchemaId(
     open val id: String
 ) {
-    /**
-     * A schema ID that is scoped to a set of scope IDs.
-     * @param id The schema ID.
-     * @param scopeIds The set of scope IDs the schema is scoped to.
-     */
-    @InternalApi
-    data class Scoped(
-        override val id: String,
-        val scopeIds: Set<String>
-    ) : SchemaId(id)
-
     /**
      * A schema ID that represents a full schema without any scoping.
      */
@@ -40,6 +28,14 @@ abstract class SchemaId(
      */
     @StableApi
     object None : SchemaId("NONE")
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SchemaId) return false
+        return id == other.id
+    }
+
+    override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "SchemaId(id='$id')"
 }

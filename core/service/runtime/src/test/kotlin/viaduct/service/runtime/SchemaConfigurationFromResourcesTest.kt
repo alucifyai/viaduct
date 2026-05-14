@@ -28,13 +28,13 @@ class SchemaConfigurationFromResourcesTest {
 
         assertEquals(2, config.scopedSchemas.size)
 
-        val apiKey = config.scopedSchemas.keys.find { it.id == "api" }
-        assertNotNull(apiKey)
-        assertEquals(setOf("internal", "public"), apiKey.scopeIds)
+        val apiEntry = config.scopedSchemas.entries.find { it.key.id == "api" }
+        assertNotNull(apiEntry)
+        assertEquals(setOf("internal", "public"), apiEntry.value.scopeIds)
 
-        val adminKey = config.scopedSchemas.keys.find { it.id == "adminApi" }
-        assertNotNull(adminKey)
-        assertEquals(setOf("admin"), adminKey.scopeIds)
+        val adminEntry = config.scopedSchemas.entries.find { it.key.id == "adminApi" }
+        assertNotNull(adminEntry)
+        assertEquals(setOf("admin"), adminEntry.value.scopeIds)
     }
 
     // TS-014: resolveSchemaId returns correct scope set for declared id; returns emptySet for FULL
@@ -72,9 +72,9 @@ class SchemaConfigurationFromResourcesTest {
             val classLoader = URLClassLoader(arrayOf(tempDir.toUri().toURL()), ClassLoader.getPlatformClassLoader())
             val config = SchemaConfiguration.fromResources(setOf("emptyScoped"), classLoader)
 
-            val emptyKey = config.scopedSchemas.keys.find { it.id == "emptyScoped" }
-            assertNotNull(emptyKey)
-            assertTrue(emptyKey.scopeIds.isEmpty(), "Expected empty scopeIds for emptyScoped schema")
+            val emptyEntry = config.scopedSchemas.entries.find { it.key.id == "emptyScoped" }
+            assertNotNull(emptyEntry)
+            assertTrue(emptyEntry.value.scopeIds.isEmpty(), "Expected empty scopeIds for emptyScoped schema")
             // The ScopedSchemaConfig.Derived.build path returns the full schema when scopeIds is empty
             assertEquals(emptySet<String>(), config.resolveSchemaId("emptyScoped"))
         } finally {

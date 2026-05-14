@@ -79,8 +79,8 @@ class EngineRegistryEagerMaterializationTest {
         // Verify registry builds successfully using the ScopedSchemaBuilder path
         val factory = EngineRegistry.Factory(createSchemaFactory(), createDocumentProviderFactory())
         val registry = factory.create(config)
-        assertNotNull(registry.getSchema(SchemaId.Scoped("api", config.resolveSchemaId("api"))))
-        assertNotNull(registry.getSchema(SchemaId.Scoped("adminApi", config.resolveSchemaId("adminApi"))))
+        assertNotNull(registry.getSchema(SchemaId("api")))
+        assertNotNull(registry.getSchema(SchemaId("adminApi")))
     }
 
     // TS-037: returned schemas are graphql-java GraphQLSchema instances
@@ -122,8 +122,8 @@ class EngineRegistryEagerMaterializationTest {
         val ids = registry.getRegisteredSchemaIds()
         assertEquals(3, ids.size, "Expected FULL + api + adminApi = 3 schemas")
         assertTrue(ids.contains(SchemaId.Full), "FULL must always be registered")
-        assertTrue(ids.any { it is SchemaId.Scoped && it.id == "api" })
-        assertTrue(ids.any { it is SchemaId.Scoped && it.id == "adminApi" })
+        assertTrue(ids.any { it.id == "api" })
+        assertTrue(ids.any { it.id == "adminApi" })
     }
 
     // TS-040: EngineRegistry immutable after construction; concurrent reads safe
@@ -134,7 +134,6 @@ class EngineRegistryEagerMaterializationTest {
         val registry = factory.create(config)
 
         val targetSchemaId = registry.getRegisteredSchemaIds()
-            .filterIsInstance<SchemaId.Scoped>()
             .first { it.id == "api" }
 
         val latch = CountDownLatch(1)
@@ -190,7 +189,7 @@ class EngineRegistryEagerMaterializationTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val badSchemaId = SchemaId.Scoped("bad-schema", setOf("bad"))
+        val badSchemaId = SchemaId("bad-schema")
 
         config.registerSchema(badSchemaId, {
             throw RuntimeException("intentional schema build failure for testing")
@@ -266,7 +265,7 @@ class EngineRegistryEagerMaterializationTest {
     fun `EAGER non-lazy scoped schemas are initialized during registry creation`() {
         var scopeBuildCount = 0
         val config = SchemaConfiguration.fromSdl(SIMPLE_SDL)
-        val schemaId = SchemaId.Scoped("counted", setOf("x"))
+        val schemaId = SchemaId("counted")
         config.registerSchema(schemaId, {
             scopeBuildCount++
             createSchemaFromSdl()

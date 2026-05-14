@@ -24,8 +24,8 @@ class TenantPackageFilteringFeatureAppTest : TenantPackageFilteringContractTest(
         }
     }
 
-    private lateinit var schemaId1: SchemaId.Scoped
-    private lateinit var schemaId2: SchemaId.Scoped
+    private lateinit var schemaId1: SchemaId
+    private lateinit var schemaId2: SchemaId
 
     @BeforeEach
     @Suppress("DEPRECATION")
@@ -37,8 +37,8 @@ class TenantPackageFilteringFeatureAppTest : TenantPackageFilteringContractTest(
                 SchemaConfiguration.ScopeConfig("SCHEMA_ID_2", setOf("SCOPE2")),
             )
         )
-        schemaId1 = SchemaId.Scoped("SCHEMA_ID_1", config.resolveSchemaId("SCHEMA_ID_1"))
-        schemaId2 = SchemaId.Scoped("SCHEMA_ID_2", config.resolveSchemaId("SCHEMA_ID_2"))
+        schemaId1 = SchemaId("SCHEMA_ID_1")
+        schemaId2 = SchemaId("SCHEMA_ID_2")
         withViaductBuilder {
             withSchemaConfiguration(config)
         }
@@ -98,8 +98,8 @@ class TenantPackageFilteringFeatureAppTest : TenantPackageFilteringContractTest(
                 SchemaConfiguration.ScopeConfig("SCOPE2_ONLY", setOf("SCOPE2"))
             )
         )
-        val scope1Only = SchemaId.Scoped("SCOPE1_ONLY", config2.resolveSchemaId("SCOPE1_ONLY"))
-        val scope2Only = SchemaId.Scoped("SCOPE2_ONLY", config2.resolveSchemaId("SCOPE2_ONLY"))
+        val scope1Only = SchemaId("SCOPE1_ONLY")
+        val scope2Only = SchemaId("SCOPE2_ONLY")
         withViaductBuilder {
             withSchemaConfiguration(config2)
         }
