@@ -4,7 +4,7 @@
 project:
   name: viaduct
   root: /Users/xyu/alucify/work/viaduct/repos/viaduct
-  canonicalBranch: feature/scoped-schema-build-time-validation
+  canonicalBranch: feature/scoped-schema-build-time-validation-ov
   qualityGates:
     - name: Tests
       command: bun test
