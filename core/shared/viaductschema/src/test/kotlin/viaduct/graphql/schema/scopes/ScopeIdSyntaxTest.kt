@@ -116,4 +116,16 @@ class ScopeIdSyntaxTest {
     fun `getOrNull returns null for invalid id`() {
         assertNull(ScopeIdSyntax.validate("Bad").getOrNull())
     }
+
+    @Test
+    fun `error message leads with human description before regex`() {
+        val result = ScopeIdSyntax.validate("Bad123")
+        val msg = result.exceptionOrNull()!!.message!!
+        assertTrue(msg.startsWith("Scope id"), "Message must start with 'Scope id'")
+        val humanIdx = msg.indexOf("lowercase ASCII letters")
+        val regexIdx = msg.indexOf(ScopeIdSyntax.PATTERN_STRING)
+        assertTrue(humanIdx >= 0, "Message must contain 'lowercase ASCII letters'")
+        assertTrue(regexIdx >= 0, "Message must contain the regex pattern")
+        assertTrue(humanIdx < regexIdx, "Human description must appear before the regex")
+    }
 }

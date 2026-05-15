@@ -36,6 +36,19 @@ class NoScopesModeControlFlowTest {
             }
         """
 
+        private const val SCOPED_SDL = """
+            schema { query: Query }
+
+            directive @scope(to: [String!]!) repeatable on OBJECT | INPUT_OBJECT | ENUM | INTERFACE | UNION | SCALAR
+
+            type Query @scope(to: ["*"]) {
+                hello: String
+            }
+
+            type AdminType @scope(to: ["admin"]) { id: ID! }
+            type PublicType @scope(to: ["public"]) { id: ID! }
+        """
+
         fun createSchemaFromSdl(sdl: String = SIMPLE_SDL): ViaductSchema =
             ViaductSchema(UnExecutableSchemaGenerator.makeUnExecutableSchema(SchemaParser().parse(sdl)))
 
@@ -86,7 +99,7 @@ class NoScopesModeControlFlowTest {
     @Test
     fun `R-20-003 positive control ScopedMode registry contains materialized scoped schemas`() {
         val config = SchemaConfiguration.fromSdl(
-            SIMPLE_SDL,
+            SCOPED_SDL,
             scopes = setOf(
                 SchemaConfiguration.ScopeConfig("api", setOf("public")),
                 SchemaConfiguration.ScopeConfig("adminApi", setOf("admin"))

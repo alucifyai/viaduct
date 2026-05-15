@@ -7,4 +7,6 @@ data class ScopedMode(
     val scopedSchemas: Map<String, Set<String>>,
 ) : ScopeMode
 
-object NoScopesMode : ScopeMode
+object NoScopesMode : ScopeMode {
+    override fun toString() = "NoScopesMode"
+}
