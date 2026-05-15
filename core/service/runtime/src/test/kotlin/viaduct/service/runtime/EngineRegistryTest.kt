@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import viaduct.engine.EngineFactory
 import viaduct.engine.SchemaFactory
@@ -23,6 +24,24 @@ class EngineRegistryTest {
             type Query {
                 hello: String
             }
+        """
+
+        private const val SCOPED_SDL = """
+            schema { query: Query }
+
+            directive @scope(to: [String!]!) repeatable on OBJECT | INPUT_OBJECT | ENUM | INTERFACE | UNION | SCALAR
+
+            type Query @scope(to: ["*"]) {
+                hello: String
+            }
+
+            type AdminType @scope(to: ["admin"]) { id: ID! }
+            type PublicType @scope(to: ["public"]) { id: ID! }
+            type InternalType @scope(to: ["internal"]) { id: ID! }
+            type LazyType @scope(to: ["lazy"]) { id: ID! }
+            type ResourceType @scope(to: ["resource"]) { id: ID! }
+            type TestType @scope(to: ["test"]) { id: ID! }
+            type SdlType @scope(to: ["sdl"]) { id: ID! }
         """
 
         fun createSchemaFromSdl(sdl: String = SIMPLE_SDL): ViaductSchema {
@@ -94,7 +113,7 @@ class EngineRegistryTest {
             SchemaConfiguration.ScopeConfig(id = "admin", scopeIds = setOf("admin")),
             SchemaConfiguration.ScopeConfig(id = "public", scopeIds = setOf("public"))
         )
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopeConfigs)
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopeConfigs)
         val registry = factory.create(config)
 
         val fullSchema = registry.getSchema(SchemaId.Full)
@@ -117,7 +136,7 @@ class EngineRegistryTest {
             SchemaConfiguration.ScopeConfig(id = "lazy-scope", scopeIds = setOf("lazy"))
         )
         val config = SchemaConfiguration.fromSdl(
-            SIMPLE_SDL,
+            SCOPED_SDL,
             scopes = scopeConfigs,
             lazyScopedSchemas = true
         )
@@ -158,7 +177,7 @@ class EngineRegistryTest {
             SchemaConfiguration.ScopeConfig(id = "lazy-test", scopeIds = setOf("lazy"))
         )
         val config = SchemaConfiguration.fromSdl(
-            SIMPLE_SDL,
+            SCOPED_SDL,
             scopes = scopeConfigs,
             lazyScopedSchemas = true
         )
@@ -219,7 +238,7 @@ class EngineRegistryTest {
         val scopeConfigs = setOf(
             SchemaConfiguration.ScopeConfig(id = "admin", scopeIds = setOf("admin"))
         )
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopeConfigs)
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopeConfigs)
         val registry = factory.create(config)
         registry.setEngineFactory(engineFactory)
 
@@ -265,7 +284,7 @@ class EngineRegistryTest {
             SchemaConfiguration.ScopeConfig(id = "lazy-engine", scopeIds = setOf("lazy"))
         )
         val config = SchemaConfiguration.fromSdl(
-            SIMPLE_SDL,
+            SCOPED_SDL,
             scopes = scopeConfigs,
             lazyScopedSchemas = true
         )
@@ -285,8 +304,9 @@ class EngineRegistryTest {
         val documentProviderFactory = createDocumentProviderFactory()
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
+        // Use empty scopeIds so applyScopes returns the full schema without filtering (no @scope directives needed).
         val scopeConfigs = setOf(
-            SchemaConfiguration.ScopeConfig(id = "resources-scope", scopeIds = setOf("resource"))
+            SchemaConfiguration.ScopeConfig(id = "resources-scope", scopeIds = emptySet())
         )
         val config = SchemaConfiguration.fromResources(
             grtPackagePrefix = "com.test.schema",
@@ -308,7 +328,7 @@ class EngineRegistryTest {
         val documentProviderFactory = createDocumentProviderFactory()
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
-        val baseSchema = createSchemaFromSdl()
+        val baseSchema = createSchemaFromSdl(SCOPED_SDL)
         val scopeConfigs = setOf(
             SchemaConfiguration.ScopeConfig(id = "from-schema", scopeIds = setOf("test"))
         )
@@ -343,7 +363,7 @@ class EngineRegistryTest {
             SchemaConfiguration.ScopeConfig("public", setOf("public")),
             SchemaConfiguration.ScopeConfig("internal", setOf("internal"))
         )
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopeConfigs)
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopeConfigs)
 
         factory.create(config)
 
@@ -360,7 +380,7 @@ class EngineRegistryTest {
         val scopeConfigs = setOf(
             SchemaConfiguration.ScopeConfig(id = "admin", scopeIds = setOf("admin"))
         )
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopeConfigs)
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopeConfigs)
         val registry = factory.create(config)
         registry.setEngineFactory(engineFactory)
 
@@ -388,7 +408,7 @@ class EngineRegistryTest {
             SchemaConfiguration.ScopeConfig(id = "public", scopeIds = setOf("public")),
             SchemaConfiguration.ScopeConfig(id = "internal", scopeIds = setOf("internal"))
         )
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopeConfigs)
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopeConfigs)
         val registry = factory.create(config)
         registry.setEngineFactory(engineFactory)
 
@@ -506,7 +526,7 @@ class EngineRegistryTest {
         val factory = EngineRegistry.Factory(schemaFactory, documentProviderFactory)
 
         val scopeConfig = SchemaConfiguration.ScopeConfig(id = "fromSdl", scopeIds = setOf("sdl"))
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = setOf(scopeConfig))
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = setOf(scopeConfig))
 
         val registeredSchemaId = SchemaId("registered")
         config.registerSchema(registeredSchemaId, { createSchemaFromSdl() })
@@ -544,5 +564,23 @@ class EngineRegistryTest {
 
         val engine2 = registry.getEngine(registeredSchemaId)
         assertSame(engine, engine2)
+    }
+
+    @Test
+    fun `applyScopes throws ViaductInvalidConfigurationException when scope set is non-empty but SDL has no scope directives`() {
+        val noScopeSchema = createSchemaFromSdl(SIMPLE_SDL)
+        val derived = SchemaConfiguration.ScopedSchemaConfig.Derived(
+            schemaId = SchemaId("api"),
+            scopeIds = setOf("public"),
+            lazy = false
+        )
+        val ex = assertThrows(ViaductInvalidConfigurationException::class.java) {
+            derived.build(noScopeSchema)
+        }
+        assertTrue(ex.message!!.contains("public"), "Exception should mention the requested scope set")
+        assertTrue(
+            ex.message!!.contains("Build-time validation"),
+            "Exception should reference Build-time validation"
+        )
     }
 }

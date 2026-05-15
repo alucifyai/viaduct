@@ -119,11 +119,15 @@ class SchemaConfiguration private constructor(
                 scopeIds: Set<String>
             ): ViaductSchema {
                 if (scopeIds.isEmpty()) {
-                    return schema
+                    return schema  // FULL semantics — empty scope set means no filtering.
                 }
                 val validScopes = schema.scopes()
                 if (validScopes.isEmpty()) {
-                    return schema
+                    throw ViaductInvalidConfigurationException(
+                        "Scoped schema requested scopes $scopeIds but the loaded SDL defines no @scope directives. " +
+                            "Build-time validation (ValidateScopesVisitor) should have caught this — likely the " +
+                            "schema artifact on the classpath is from a build that predates the scope configuration."
+                    )
                 }
                 val scopedSchema = ScopedSchemaBuilder(
                     inputSchema = schema.schema,
@@ -189,6 +193,17 @@ class SchemaConfiguration private constructor(
                 )
             }
 
+            if (resourceFileSchema.version != ResourceFileSchema.CURRENT_VERSION) {
+                throw ViaductSchemaLoadException(
+                    "Incompatible schema-scoping resource version: file is '${resourceFileSchema.version}', " +
+                        "this runtime expects '${ResourceFileSchema.CURRENT_VERSION}'. " +
+                        "Rebuild the application against the matching Viaduct version."
+                )
+            }
+            // TODO: when CURRENT_VERSION advances past "1", replace strict equality with a
+            // version-aware dispatch (sealed-type or a Map<String, Parser>) so old files
+            // can still be read against an explicit migration path.
+
             val scopes = mutableSetOf<ScopeConfig>()
             for (schemaId in schemaIds) {
                 if (schemaId == ResourceFileSchema.FULL_SCHEMA_ID) {
@@ -221,6 +236,15 @@ class SchemaConfiguration private constructor(
                     e
                 )
             }
+
+            if (resourceFileSchema.version != ResourceFileSchema.CURRENT_VERSION) {
+                throw ViaductSchemaLoadException(
+                    "Incompatible schema-scoping resource version: file is '${resourceFileSchema.version}', " +
+                        "this runtime expects '${ResourceFileSchema.CURRENT_VERSION}'. " +
+                        "Rebuild the application against the matching Viaduct version."
+                )
+            }
+
             val scopes = resourceFileSchema.declaredScopedSchemas
                 .filterKeys { it != ResourceFileSchema.FULL_SCHEMA_ID }
                 .map { (id, scopeIds) -> ScopeConfig(id, scopeIds) }

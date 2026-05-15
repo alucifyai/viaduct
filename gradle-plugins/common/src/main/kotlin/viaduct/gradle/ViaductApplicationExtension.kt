@@ -53,7 +53,8 @@ open class ViaductApplicationExtension(objects: ObjectFactory) {
                 "Duplicate scope IDs declared: $duplicates. Each scope ID may only be declared once."
             )
         }
-        scopeUniverse.addAll(scopes)
+        val sortedNew = scopes.toSortedSet()
+        scopeUniverse.addAll(sortedNew)
     }
 
     /**
@@ -73,7 +74,7 @@ open class ViaductApplicationExtension(objects: ObjectFactory) {
                     "Declare them first with declaredSchemaScopes()."
             )
         }
-        _scopedSchemas[id] = scopes
+        _scopedSchemas[id] = scopes.toSortedSet()
         scopedSchemaEntries.add("$id=${scopes.sorted().joinToString(",")}")
     }
 

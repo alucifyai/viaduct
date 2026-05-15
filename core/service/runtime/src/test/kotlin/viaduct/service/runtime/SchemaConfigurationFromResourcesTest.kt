@@ -218,4 +218,58 @@ class SchemaConfigurationFromResourcesTest {
         }
         assertTrue(ex.message!!.contains("notRegistered"))
     }
+
+    @Test
+    fun `fromResources throws ViaductSchemaLoadException when version field does not match CURRENT_VERSION`() {
+        val tempDir = Files.createTempDirectory("viaduct-version-mismatch")
+        try {
+            val metaInfDir = tempDir.resolve("META-INF/viaduct")
+            Files.createDirectories(metaInfDir)
+            Files.writeString(
+                metaInfDir.resolve("schema-scoping.json"),
+                """{"declaredSchemaScopes":[],"declaredScopedSchemas":{"FULL":[]},"version":"999"}"""
+            )
+            val classLoader = java.net.URLClassLoader(
+                arrayOf(tempDir.toUri().toURL()),
+                ClassLoader.getPlatformClassLoader()
+            )
+            val ex = assertThrows<ViaductSchemaLoadException> {
+                SchemaConfiguration.fromResources(setOf("FULL"), classLoader)
+            }
+            assertTrue(ex.message!!.contains("999"), "Exception should name the file version")
+            assertTrue(
+                ex.message!!.contains(ResourceFileSchema.CURRENT_VERSION),
+                "Exception should name the expected runtime version"
+            )
+        } finally {
+            tempDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `version mismatch error message names file version and runtime version verbatim`() {
+        val tempDir = Files.createTempDirectory("viaduct-version-msg")
+        try {
+            val metaInfDir = tempDir.resolve("META-INF/viaduct")
+            Files.createDirectories(metaInfDir)
+            Files.writeString(
+                metaInfDir.resolve("schema-scoping.json"),
+                """{"declaredSchemaScopes":[],"declaredScopedSchemas":{"FULL":[]},"version":"42"}"""
+            )
+            val classLoader = java.net.URLClassLoader(
+                arrayOf(tempDir.toUri().toURL()),
+                ClassLoader.getPlatformClassLoader()
+            )
+            val ex = assertThrows<ViaductSchemaLoadException> {
+                SchemaConfiguration.fromResources(setOf("FULL"), classLoader)
+            }
+            assertTrue(ex.message!!.contains("'42'"), "Message must include literal file version '42'")
+            assertTrue(
+                ex.message!!.contains("'${ResourceFileSchema.CURRENT_VERSION}'"),
+                "Message must include literal runtime version"
+            )
+        } finally {
+            tempDir.toFile().deleteRecursively()
+        }
+    }
 }

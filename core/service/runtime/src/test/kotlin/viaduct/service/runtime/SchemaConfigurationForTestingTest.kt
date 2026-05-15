@@ -6,6 +6,7 @@ import java.net.URLClassLoader
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import viaduct.apiannotations.InternalApi
@@ -112,6 +113,19 @@ class SchemaConfigurationForTestingTest {
         assertThrows<ViaductSchemaLoadException> {
             SchemaConfiguration.forTesting("{ not valid json !!!")
         }
+    }
+
+    @Test
+    fun `forTesting throws ViaductSchemaLoadException when version does not match CURRENT_VERSION`() {
+        val json = """{"declaredSchemaScopes":[],"declaredScopedSchemas":{"FULL":[]},"version":"999"}"""
+        val ex = assertThrows<ViaductSchemaLoadException> {
+            SchemaConfiguration.forTesting(json)
+        }
+        assertTrue(ex.message!!.contains("999"), "Exception should name the file version")
+        assertTrue(
+            ex.message!!.contains(ResourceFileSchema.CURRENT_VERSION),
+            "Exception should name the expected runtime version"
+        )
     }
 
     // ROUND-TRIP: forTesting with empty scopes creates config with no scoped schemas

@@ -1,6 +1,5 @@
 package viaduct.graphql.schema.scopes
 
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.cfg.PackageVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -55,10 +54,20 @@ class ResourceFileSchemaTest {
         assertTrue(muIndex < zetaIndex, "mu should appear before zeta in JSON")
     }
 
-    // Assert objectMapper has ORDER_MAP_ENTRIES_BY_KEYS enabled
+    // Verify key ordering comes from the data (sorted map insertion), not from a Jackson feature flag.
     @Test
-    fun `objectMapper has ORDER_MAP_ENTRIES_BY_KEYS enabled`() {
-        assertTrue(ResourceFileSchema.objectMapper().isEnabled(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS))
+    fun `declaredScopedSchemas keys are serialized in alphabetical order from sorted construction`() {
+        val schema = ResourceFileSchema.create(
+            declaredScopedSchemas = mapOf("zeta" to emptySet(), "alpha" to emptySet())
+        )
+        val json = ResourceFileSchema.objectMapper().writeValueAsString(schema)
+        val deserialized = ResourceFileSchema.objectMapper().readValue(json, ResourceFileSchema::class.java)
+        assertEquals(schema, deserialized)
+        val fullIdx = json.indexOf("\"FULL\"")
+        val alphaIdx = json.indexOf("\"alpha\"")
+        val zetaIdx = json.indexOf("\"zeta\"")
+        assertTrue(fullIdx < alphaIdx, "FULL should appear before alpha in JSON")
+        assertTrue(alphaIdx < zetaIdx, "alpha should appear before zeta in JSON")
     }
 
     // Verify runtime Jackson version is 2.17.3

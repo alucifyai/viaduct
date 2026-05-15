@@ -11,7 +11,8 @@ object ScopeIdSyntax {
         } else {
             Result.failure(
                 IllegalArgumentException(
-                    "Scope id \"$id\" is invalid: must match $PATTERN_STRING (lowercase ASCII letters only)"
+                    "Scope id \"$id\" is invalid: must be one or more lowercase ASCII letters " +
+                        "(regex: $PATTERN_STRING)"
                 )
             )
         }

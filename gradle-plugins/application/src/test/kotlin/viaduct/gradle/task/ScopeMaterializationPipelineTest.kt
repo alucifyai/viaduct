@@ -2,6 +2,8 @@ package viaduct.gradle.task
 
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.UnExecutableSchemaGenerator
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -150,6 +152,29 @@ class ScopeMaterializationPipelineTest {
         scopeSets.forEach { pipeline.materialize(it) }
 
         assertEquals(2, pipeline.materializationCount)
+    }
+
+    @Test
+    fun `concurrent materialize calls for same scope set result in materializationCount of 1`() {
+        val fullSchema = buildFixtureSchema()
+        val pipeline = ScopeMaterializationPipeline(fullSchema, sortedSetOf("public", "internal"))
+        val scopeSet = setOf("public")
+        val latch = CountDownLatch(1)
+        val results = CopyOnWriteArrayList<graphql.schema.GraphQLSchema>()
+
+        val threads = (1..10).map {
+            Thread {
+                latch.await()
+                results.add(pipeline.materialize(scopeSet))
+            }.apply { start() }
+        }
+        latch.countDown()
+        threads.forEach { it.join() }
+
+        assertEquals(10, results.size)
+        assertEquals(1, pipeline.materializationCount)
+        val first = results.first()
+        results.forEach { assertSame(first, it) }
     }
 
     // Scope set ordering should not affect cache key

@@ -20,13 +20,11 @@ open class SchemaId(
     /**
      * A schema ID that represents a full schema without any scoping.
      */
-    @StableApi
     object Full : SchemaId("FULL")
 
     /**
      * Represents a non-existent schema.
      */
-    @StableApi
     object None : SchemaId("NONE")
 
     override fun equals(other: Any?): Boolean {

@@ -3,13 +3,14 @@ package viaduct.gradle.task
 import graphql.GraphQL
 import graphql.introspection.IntrospectionQuery
 import graphql.schema.GraphQLSchema
+import java.io.File
 import java.util.SortedSet
+import java.util.concurrent.ConcurrentHashMap
 import org.gradle.api.GradleException
 import viaduct.graphql.scopes.ScopedSchemaBuilder
 import viaduct.graphql.scopes.errors.SchemaScopeValidationError
 import viaduct.graphql.schema.scopes.ResourceFileSchema
 import viaduct.graphql.schema.scopes.ScopedMode
-import java.io.File
 
 /**
  * Encapsulates scope materialization with memoization.
@@ -23,11 +24,11 @@ internal class ScopeMaterializationPipeline(
     private val scopeUniverse: SortedSet<String>,
 ) {
     private val scopedBuilder = ScopedSchemaBuilder(fullSchema, scopeUniverse, emptyList())
-    private val cache = mutableMapOf<Set<String>, GraphQLSchema>()
+    private val cache = ConcurrentHashMap<Set<String>, GraphQLSchema>()
 
     val materializationCount: Int get() = cache.size
 
-    fun materialize(scopeSet: Set<String>): GraphQLSchema = cache.getOrPut(scopeSet) {
+    fun materialize(scopeSet: Set<String>): GraphQLSchema = cache.computeIfAbsent(scopeSet) {
         if (scopeSet.isEmpty()) {
             fullSchema
         } else {

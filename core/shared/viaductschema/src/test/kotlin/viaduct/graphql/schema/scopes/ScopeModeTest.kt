@@ -21,6 +21,11 @@ class ScopeModeTest {
     }
 
     @Test
+    fun `NoScopesMode toString is NoScopesMode`() {
+        assertEquals("NoScopesMode", NoScopesMode.toString())
+    }
+
+    @Test
     fun `ScopedMode data class equality across same-arg instances`() {
         val a = ScopedMode(
             scopeUniverse = setOf("public", "internal"),

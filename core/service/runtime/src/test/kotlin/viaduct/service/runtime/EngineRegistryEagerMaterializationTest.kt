@@ -40,6 +40,20 @@ class EngineRegistryEagerMaterializationTest {
             }
         """
 
+        private const val SCOPED_SDL = """
+            schema { query: Query }
+
+            directive @scope(to: [String!]!) repeatable on OBJECT | INPUT_OBJECT | ENUM | INTERFACE | UNION | SCALAR
+
+            type Query @scope(to: ["*"]) {
+                hello: String
+            }
+
+            type AdminType @scope(to: ["admin"]) { id: ID! }
+            type PublicType @scope(to: ["public"]) { id: ID! }
+            type InternalType @scope(to: ["internal"]) { id: ID! }
+        """
+
         fun createSchemaFromSdl(sdl: String = SIMPLE_SDL): ViaductSchema {
             val graphQLSchema = UnExecutableSchemaGenerator.makeUnExecutableSchema(
                 SchemaParser().parse(sdl)
@@ -50,7 +64,7 @@ class EngineRegistryEagerMaterializationTest {
         fun createSchemaFactory(): SchemaFactory {
             val schemaFactory = mockk<SchemaFactory>()
             every { schemaFactory.fromSdl(any()) } answers { createSchemaFromSdl(firstArg()) }
-            every { schemaFactory.fromResources(any(), any()) } answers { createSchemaFromSdl() }
+            every { schemaFactory.fromResources(any(), any()) } answers { createSchemaFromSdl(SCOPED_SDL) }
             return schemaFactory
         }
 
@@ -64,7 +78,7 @@ class EngineRegistryEagerMaterializationTest {
             SchemaConfiguration.ScopeConfig("api", setOf("public")),
             SchemaConfiguration.ScopeConfig("adminApi", setOf("admin"))
         )
-        val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopeConfigs)
+        val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopeConfigs)
 
         // Verify all scoped schema configs are the existing Derived implementation
         // (no new transformer class was introduced, per TS-038)
@@ -208,7 +222,7 @@ class EngineRegistryEagerMaterializationTest {
         logger.addAppender(listAppender)
         try {
             val scopes = (1..21).map {
-                SchemaConfiguration.ScopeConfig("scope$it", setOf("scope$it"))
+                SchemaConfiguration.ScopeConfig("scope$it", emptySet())
             }.toSet()
             val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopes)
             val factory = EngineRegistry.Factory(createSchemaFactory(), createDocumentProviderFactory())
@@ -241,7 +255,7 @@ class EngineRegistryEagerMaterializationTest {
                 SchemaConfiguration.ScopeConfig("api", setOf("public")),
                 SchemaConfiguration.ScopeConfig("adminApi", setOf("admin"))
             )
-            val config = SchemaConfiguration.fromSdl(SIMPLE_SDL, scopes = scopes)
+            val config = SchemaConfiguration.fromSdl(SCOPED_SDL, scopes = scopes)
             val factory = EngineRegistry.Factory(createSchemaFactory(), createDocumentProviderFactory())
             factory.create(config)
 

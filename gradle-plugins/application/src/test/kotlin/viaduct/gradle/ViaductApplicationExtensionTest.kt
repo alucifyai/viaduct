@@ -146,4 +146,12 @@ class ViaductApplicationExtensionTest {
         ext.declaredSchemaScopes(setOf("public"))
         assertEquals(setOf("public"), ext.scopeUniverse.get())
     }
+
+    @Test
+    fun `declaredScopedSchema stores scopes in sorted iteration order`() {
+        ext.declaredSchemaScopes(setOf("alpha", "zeta"))
+        ext.declaredScopedSchema("api", setOf("zeta", "alpha"))
+        val info = ext.getSchemaScopeInfo() as ScopedMode
+        assertEquals(listOf("alpha", "zeta"), info.scopedSchemas["api"]!!.toList())
+    }
 }

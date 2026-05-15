@@ -1,7 +1,6 @@
 package viaduct.graphql.schema.scopes
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 data class ResourceFileSchema(
@@ -18,21 +17,18 @@ data class ResourceFileSchema(
             declaredScopedSchemas: Map<String, Set<String>> = emptyMap(),
             version: String = CURRENT_VERSION,
         ): ResourceFileSchema {
-            val normalizedScopes = declaredSchemaScopes.toSortedSet()
-            val mutableScopedSchemas = declaredScopedSchemas
-                .mapValues { it.value.toSortedSet() as Set<String> }
-                .toMutableMap()
-            if (!mutableScopedSchemas.containsKey(FULL_SCHEMA_ID)) {
-                mutableScopedSchemas[FULL_SCHEMA_ID] = emptySet()
+            val sortedScopes: Set<String> = declaredSchemaScopes.toSortedSet()
+            val sortedScopedSchemas: Map<String, Set<String>> = buildMap {
+                // Preserve sorted order by inserting from a sorted iteration over keys.
+                val withFull = if (declaredScopedSchemas.containsKey(FULL_SCHEMA_ID)) declaredScopedSchemas
+                               else declaredScopedSchemas + (FULL_SCHEMA_ID to emptySet())
+                for (key in withFull.keys.toSortedSet()) {
+                    put(key, withFull.getValue(key).toSortedSet())
+                }
             }
-            return ResourceFileSchema(
-                declaredSchemaScopes = normalizedScopes,
-                declaredScopedSchemas = mutableScopedSchemas.toSortedMap(),
-                version = version,
-            )
+            return ResourceFileSchema(sortedScopes, sortedScopedSchemas, version)
         }
 
         fun objectMapper(): ObjectMapper = jacksonObjectMapper()
-            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
     }
 }
